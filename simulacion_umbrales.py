@@ -35,7 +35,26 @@ def carga_sistema(t):
     if 80 <= t < 90:
         carga += 1.5  # aumento de carga (segundo pico alto)
 
+    carga += np.random.normal(0, 0.1)
+
     return carga
+
+def control_por_umbrales(error):
+    if error >= 0.3: # UMBRAL 3
+        return -3
+    elif error >= 0.2: # UMBRAL 2
+        return -2
+    elif error >= 0.1: # UMBRAL 1
+        return -1
+    elif error <= -0.3: # UMBRAL 3
+        return 3
+    elif error <= -0.2: # UMBRAL 2
+        return 2
+    elif error <= -0.1: # UMBRAL 1
+        return 1
+    else:
+        return 0
+
 
 # Arreglos para almacenar resultados en el tiempo
 tiempos = np.arange(0, total_time_minutes + 0.0001, dt)  # vector de tiempo en minutos
@@ -57,8 +76,16 @@ for i, t in enumerate(tiempos):
     cantidad_pods[i] = pods_actuales
     # 3. Controlador proporcional: decidir si escalar según CPU vs objetivo
     if i - ultimo_escaleo >= cooldown_steps:
-        # Calcular réplicas deseadas según la fórmula proporcional
-        replicas_deseadas = pods_actuales * (uso_actual / cpu_target)
+
+        # Calcular réplicas deseadas según el umbral de error.
+        error = cpu_target - uso_actual
+        delta_pods = control_por_umbrales(error)
+        replicas_deseadas = pods_actuales + delta_pods
+
+        # Limitar a enteros y dentro del rango permitido
+        replicas_deseadas = max(min_pods, min(max_pods, round(replicas_deseadas)))
+
+
         # Redondear hacia arriba para no infra-provisionar (ceil asegura cubrir la carga)
         nuevos_pods = int(np.ceil(replicas_deseadas))
         # Aplicar límites mínimo y máximo
@@ -73,8 +100,16 @@ for i, t in enumerate(tiempos):
 # Fin del bucle de simulación
 
 # Graficar resultados
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,6), sharex=True)
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10,8), sharex=True)
+
+
 # Gráfico de utilización de CPU (% por pod)
+ax1.axhline(y=(cpu_target*100)-30, color='y', linestyle='--', label='Umbral 3')
+ax1.axhline(y=(cpu_target*100)-20, color='g', linestyle='--', label='Umbral 2')
+ax1.axhline(y=(cpu_target*100)-10, color='b', linestyle='--', label='Umbral 1')
+ax1.axhline(y=(cpu_target*100)+10, color='b', linestyle='--', label='')
+ax1.axhline(y=(cpu_target*100)+20, color='g', linestyle='--', label='')
+ax1.axhline(y=(cpu_target*100)+30, color='y', linestyle='--', label='')
 ax1.plot(tiempos, uso_cpu * 100, color='orange', label='Utilización CPU (%)')
 ax1.axhline(cpu_target * 100, color='r', linestyle='--', label='Objetivo CPU (60%)')
 ax1.set_ylabel('Utilización CPU por pod (%)')
@@ -89,5 +124,18 @@ ax2.set_title('Número de pods activos en el tiempo')
 ax2.set_ylim(0, max_pods + 1)
 ax2.legend(loc='upper right')
 ax2.grid(True)
+
+# Calcular la carga total a lo largo del tiempo para graficarla
+cargas = np.array([carga_sistema(t) for t in tiempos])
+
+# Gráfico de la carga total del sistema
+ax3.plot(tiempos, cargas, color='blue', label='Carga de trabajo total')
+ax3.set_ylabel('Carga total')
+ax3.set_xlabel('Tiempo (minutos)')
+ax3.set_title('Evolución de la carga de trabajo del sistema')
+ax3.grid(True)
+ax3.legend(loc='upper right')
+
+
 plt.tight_layout()
 plt.show()
