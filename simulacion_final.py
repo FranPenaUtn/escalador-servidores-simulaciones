@@ -44,7 +44,7 @@ ax3.set_ylabel('Carga total'); ax3.set_xlabel('Tiempo (min)')
 ax3.legend(); ax3.grid(True)
 
 # Sliders
-slider_carga = Slider(plt.axes([0.25, 0.27, 0.5, 0.03]), 'Carga', 0.0, 5.0, valinit=0.5, valstep=0.1)
+slider_carga = Slider(plt.axes([0.25, 0.27, 0.5, 0.03]), 'Carga', 0.0, 5.0, valinit=1, valstep=0.1)
 slider_kp = Slider(plt.axes([0.25, 0.22, 0.5, 0.03]), 'Kp', 1, 10, valinit=4.0, valstep=0.5)
 
 # Botones
@@ -93,7 +93,7 @@ def update(frame):
     line_pods.set_data(tiempos, cantidad_pods)
     line_carga.set_data(tiempos, carga_registrada)
 
-    text_cpu.set_text(f'CPU actual: {uso_actual * 100:.1f}% {error}')
+    text_cpu.set_text(f'CPU actual: {uso_actual * 100:.1f}%')
     text_cpu.set_position((tiempo_actual - 5, uso_actual * 100))
     text_pods.set_text(f'Pods activos: {pods_actuales}')
     text_pods.set_position((tiempo_actual - 5, pods_actuales))
@@ -126,8 +126,8 @@ def reset_simulacion(event):
     carga_registrada.clear()
 
     # Reset sliders
-    slider_carga.set_val(0.5)
-    slider_kp.set_val(10.0)
+    slider_carga.set_val(1)
+    slider_kp.set_val(4.0)
 
     # Reset etiquetas de botones
     btn_ddos.label.set_text("Ataque DDoS")
