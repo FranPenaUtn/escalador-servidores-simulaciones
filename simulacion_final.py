@@ -48,7 +48,7 @@ text_error = ax4.text(-5, 0, '', fontsize=8, va='center', color='black')
 
 
 # Función de control
-line_control, = ax5.plot([], [], color='purple', label='f(t) = Kp * e(t)')
+line_control, = ax5.plot([], [], color='purple', label='F[kt]')
 ax5.set_ylabel('F[kT] (CPU medida)'); ax5.set_xlabel('Tiempo (min)'); ax5.grid(True)
 ax5.legend()
 text_control = ax5.text(-5, 0, '', fontsize=8, va='center', color='black')
